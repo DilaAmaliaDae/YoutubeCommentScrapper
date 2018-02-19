@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+# usage python Retrieve_Feminism_comments.py --q="string" --max-results=num
+# where string can be trending or top or any keyword we want to search the 
+# contents for while num is the number of results limited to [0, 50]
+
 import io
 import shutil
 from apiclient.discovery import build
@@ -201,7 +205,7 @@ if __name__ == "__main__":
   args = argparser.parse_args(sys.argv[3:])
   print args
   youtube = get_authenticated_service(args)
-  myfile = open("Feminism Comments4", 'w')
+  myfile = open(arguments.q+".csv", 'w')
   target = csv.writer(myfile, delimiter='\t')
   target.writerow(["videoId", "Video Title", "Comment or Reply", 
 		   "Id", "parentId", "authorDisplayName",
