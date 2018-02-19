@@ -1,18 +1,21 @@
 #!/usr/bin/python
 
+import io
+import shutil
 from apiclient.discovery import build
 from apiclient.discovery import build_from_document
 from apiclient.errors import HttpError
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 from oauth2client.tools import argparser, run_flow
+#from oauth2client.tools import run_flow
 import httplib2
 import os
 import sys
 import csv
 import pdb
-
-
+import argparse
+import sys 
 
 
 # Set DEVELOPER_KEY to the API key value from the APIs & auth > Registered apps
@@ -23,16 +26,19 @@ DEVELOPER_KEY = "AIzaSyDJFA5UmNNPVVRt0ufaEeD4hOk-VvveSjw"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
-def youtube_channel_search():
+def youtube_channel_search(args):
+  print sys._getframe().f_code.co_name
+  print args.q
+  print args.max_results
   youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
     developerKey=DEVELOPER_KEY)
 
   # Call the search.list method to retrieve results matching the specified
   # query term.
   search_response = youtube.search().list(
-    q="feminism",
+    q=args.q,
     part="id,snippet",
-    maxResults=50,
+    maxResults=args.max_results,
     type ="channel"
   ).execute()
 
@@ -44,17 +50,20 @@ def youtube_channel_search():
       channels.append("%s" % (search_result["id"]["channelId"]))
   return channels
 
-def youtube_video_search(options):
+def youtube_video_search(options, args):
+  print sys._getframe().f_code.co_name
+  print args.q
+  print args.max_results
   youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
     developerKey=DEVELOPER_KEY)
 
   # Call the search.list method to retrieve results matching the specified
   # query term.
   search_response = youtube.search().list(
-    q="feminism",
+    q=args.q,
     part="id,snippet",
     channelId=options,
-    maxResults="50"
+    maxResults=args.max_results
   ).execute()
 
   videos = []
@@ -106,7 +115,7 @@ def get_authenticated_service(args):
 
   # Trusted testers can download this discovery document from the developers page
   # and it should be in the same directory with the code.
-  with open("youtube-v3-discoverydocument.json", "r", encoding="utf8") as f:
+  with io.open("youtube-v3-discoverydocument.json", "r", encoding="utf8") as f:
     doc = f.read()
     return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
 
@@ -182,18 +191,24 @@ def get_comment_threads(youtube, video_id, video_title, target):
 
 
 
-
 if __name__ == "__main__":
-  args = argparser.parse_args()
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--q', help='Search term', default='Google')
+  parser.add_argument('--max-results', help='Max results', default=25)  
+  arguments = parser.parse_args()
+  print arguments
+
+  args = argparser.parse_args(sys.argv[3:])
+  print args
   youtube = get_authenticated_service(args)
-  myfile = open("Feminism Comments4", 'w', newline = '')
+  myfile = open("Feminism Comments4", 'w')
   target = csv.writer(myfile, delimiter='\t')
-  target.writerow(["videoId", "Video Title", "Comment or Reply",
-                   "Id", "parentId", "authorDisplayName",
-                   "authorChannelId", "Comment Content",
-                   "Reply Content", "likeCount", "publishedAt"])
-  for channel in youtube_channel_search():
-    VideoList = youtube_video_search(channel)
+  target.writerow(["videoId", "Video Title", "Comment or Reply", 
+		   "Id", "parentId", "authorDisplayName",
+		   "authorChannelId", "Comment Content", 
+		   "Reply Content", "likeCount", "publishedAt"])
+  for channel in youtube_channel_search(arguments):
+    VideoList = youtube_video_search(channel, arguments)
     for x in range(0, len(VideoList)-1, 2):
       try:
         video_title = VideoList[x]
@@ -205,23 +220,3 @@ if __name__ == "__main__":
         print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
         pass
   myfile.close()
-
-'''
-  args = argparser.parse_args()
-  youtube = get_authenticated_service(args)
-  target = open("Feminism Comments2", 'w')
-  for channel in youtube_channel_search():
-    VideoList = youtube_video_search(channel)
-    for x in range(0, len(VideoList)-1, 2):
-      try:
-        target.write("\n\nVideo Title: %s\nVideoId: %s\n\n" %(VideoList[x], VideoList[x+1]))
-        get_comment_threads(youtube, VideoList[x+1], target)
-      except HttpError as e:
-        print ("An HTTP error %d occurred:\n%s" % (e.resp.status, e.content))
-        pass
-  target.close()
-'''
-
-
-
-
