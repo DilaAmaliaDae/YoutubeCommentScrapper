@@ -1,6 +1,13 @@
 # YoutubeCommentScrapper
 
 
+Running Retrive_Feminist_comments.py
+
+python Retrieve_Feminist_comments.py --q="search_keyword" --max_results=x
+
+x = [0,50]
+
+
 extract.py   - extracts only the comments/replies (assuming they are in 7 and 8 
                 of the input csv file) from all the csv files present in the 
                 current working directory and writes all of these in commentcs.csv
